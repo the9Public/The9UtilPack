@@ -1,0 +1,125 @@
+plugins {
+	id 'java'
+	id 'java-library'
+	id 'maven-publish'
+}
+
+group = 'the9a.util'
+version = '8.0.1'
+
+java {
+	sourceCompatibility = "1.8"
+	/*
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    */
+    withJavadocJar() // Javadoc JAR 포함
+    withSourcesJar() // 소스 JAR 포함
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main'
+        }
+    }
+}
+
+jar {
+    // 소스 디렉토리에 있는 파일들을 JAR에 포함
+    //from sourceSets.main.allSource
+    archiveBaseName = project.group
+    archiveVersion = project.version
+}
+
+
+repositories {
+	mavenCentral()
+//	maven {
+//		allowInsecureProtocol = true
+//		url = 'https://nexus.[DOMAIN].co.kr/repository/maven-public/'
+//	}
+}
+
+dependencies {
+	// Use JUnit Jupiter for testing.
+    //testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter 
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    
+    // This dependency is used by the application.
+    implementation 'com.google.guava:guava:31.1-jre'
+    
+	// APACHE UTIL
+	implementation 'org.apache.commons:commons-lang3:3.17.0'
+	implementation 'org.apache.commons:commons-text:1.13.0'
+	implementation 'commons-codec:commons-codec:1.18.0'
+	
+	// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+	implementation 'org.slf4j:slf4j-api:2.0.16'
+	// https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+	testImplementation 'org.slf4j:slf4j-simple:2.0.16'
+
+	// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.0")
+    // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-databind
+	implementation 'tools.jackson.core:jackson-databind:3.0.4'
+	// https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api
+	compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+	
+	// Spring WEB
+	// JDK 1.8 한계
+    implementation("org.springframework:spring-web:5.3.39")
+
+	//local
+	implementation fileTree(dir: 'libs', include: '**/*.jar')
+}
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+	
+	repositories {
+		maven {
+			name="repoName"
+			allowInsecureProtocol = true
+			if(version.toString().contains("SNAPSHOT"))
+			{
+				url = "https://nexus.[DOMAIN].co.kr/repository/maven-snapshots/"
+			}
+			else
+			{
+				url = "https://nexus.[DOMAIN].co.kr/repository/maven-releases/"
+			}
+			credentials {
+				username = project.findProperty("MAVEN_CREDENTIAL_ID")
+				password = project.findProperty("MAVEN_CREDENTIAL_PW")
+			}
+		}
+	}
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
